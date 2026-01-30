@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"parking/auth"
+	"parking/parsers"
 
 	"github.com/modernice/pdfire"
 	"golang.org/x/oauth2/google"
@@ -100,6 +101,8 @@ func init() {
 func main() {
 	pdfs := make([]*pdfire.ConversionOptions, 0)
 
+	parser := parsers.ParkingParser{}
+
 	// retrieve all mail from {sender} that was received after {date}, only including mail containing {subject} in the Subject line
 	msgs := Must(mailService.Users.Messages.List("me").Q(query.String()).Do())
 	for _, msg := range msgs.Messages {
@@ -117,10 +120,17 @@ func main() {
 				continue
 			}
 
+			// parse HTML while we still have access to it
+			rawHTML := string(Must(base64.URLEncoding.DecodeString(p.Body.Data)))
+			parser.Parse(rawHTML)
+
+			t := Must(os.Create(msg.Id + ".html"))
+			defer t.Close()
+			t.WriteString(rawHTML)
+
 			// store HTML for merging into one file later
-			d := Must(base64.URLEncoding.DecodeString(p.Body.Data))
 			opt := pdfire.NewConversionOptions()
-			opt.HTML = string(d)
+			opt.HTML = rawHTML
 
 			pdfs = append(pdfs, opt)
 		}
@@ -132,6 +142,8 @@ func main() {
 	opt.Documents = pdfs
 
 	pdfire.Merge(context.Background(), r, opt)
+
+	parser.ParseBatch()
 
 	fmt.Println("Finished")
 	r.Close()
