@@ -104,6 +104,5 @@ func main() {
 	}
 
 	// merge PDFs
-	fmt.Println(tPDF)
 	pdfcpu.MergeCreateFile(tPDF, "Receipts.pdf", false, nil)
 }
