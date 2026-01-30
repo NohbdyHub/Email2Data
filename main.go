@@ -49,9 +49,6 @@ func (q *GmailQuery) String() string {
 	return b.String()
 }
 
-var mailService *gmail.Service
-var query = GmailQuery{}
-
 func Must[T any](obj T, err error) T {
 	if err != nil {
 		panic(err)
@@ -68,6 +65,8 @@ func getHeader(h []*gmail.MessagePartHeader, n string) string {
 	return ""
 }
 
+var mailService *gmail.Service
+var query = GmailQuery{}
 func init() {
 	queryFile := Must(os.OpenFile("query.json", os.O_CREATE | os.O_RDWR, 0666))
 	defer queryFile.Close()
@@ -123,10 +122,6 @@ func main() {
 			// parse HTML while we still have access to it
 			rawHTML := string(Must(base64.URLEncoding.DecodeString(p.Body.Data)))
 			parser.Parse(rawHTML)
-
-			t := Must(os.Create(msg.Id + ".html"))
-			defer t.Close()
-			t.WriteString(rawHTML)
 
 			// store HTML for merging into one file later
 			opt := pdfire.NewConversionOptions()
