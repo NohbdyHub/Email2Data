@@ -8,17 +8,12 @@ import (
 	"io"
 	"time"
 
-	//	"log"
 	"os"
-	"os/exec"
-	"path"
-	"strconv"
 	"strings"
 
 	"parking/auth"
 
-	"github.com/ledongthuc/pdf"
-	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/modernice/pdfire"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
@@ -73,8 +68,6 @@ func getHeader(h []*gmail.MessagePartHeader, n string) string {
 }
 
 func init() {
-	pdf.DebugOn = true
-
 	queryFile := Must(os.OpenFile("query.json", os.O_CREATE | os.O_RDWR, 0666))
 	defer queryFile.Close()
 
@@ -105,17 +98,14 @@ func init() {
 }
 
 func main() {
-	tPDF := make([]string, 0)
-	t := Must(os.MkdirTemp("", "receipts"))
-	defer os.RemoveAll(t)
-	fmt.Println(t)
+	pdfs := make([]*pdfire.ConversionOptions, 0)
 
 	// retrieve all mail from {sender} that was received after {date}, only including mail containing {subject} in the Subject line
 	msgs := Must(mailService.Users.Messages.List("me").Q(query.String()).Do())
 	for _, msg := range msgs.Messages {
 		email := Must(mailService.Users.Messages.Get("me", msg.Id).Format("full").Do())
 
-		for j, p := range email.Payload.Parts {
+		for _, p := range email.Payload.Parts {
 			isHTML := false
 			for _, h := range p.Headers {
 				if h.Name == "Content-Type" && strings.Split(h.Value, ";")[0] == "text/html" {
@@ -127,21 +117,22 @@ func main() {
 				continue
 			}
 
-			// trim 2 bytes off html, invalid base64 enoding error at that byte?
-			d := Must(base64.RawURLEncoding.DecodeString(p.Body.Data[0:len(p.Body.Data) - 2]))
+			// store HTML for merging into one file later
+			d := Must(base64.URLEncoding.DecodeString(p.Body.Data))
+			opt := pdfire.NewConversionOptions()
+			opt.HTML = string(d)
 
-			f := path.Join(t, msg.Id + strconv.FormatInt(int64(j), 10))
-			o := Must(os.Create(f + ".html"))
-			Must(o.WriteString(string(d)))
-			o.Close()
-
-			// render to pdf
-			err := exec.Command("wkhtmltopdf", "--enable-local-file-access", f + ".html", f + ".pdf").Run()
-			fmt.Println(err)
-			tPDF = append(tPDF, f + ".pdf")
+			pdfs = append(pdfs, opt)
 		}
 	}
 
-	// merge PDFs
-	pdfcpu.MergeCreateFile(tPDF, "Receipts.pdf", false, nil)
+	r := Must(os.Create("Receipts.pdf"))
+
+	opt := pdfire.NewMergeOptions()
+	opt.Documents = pdfs
+
+	pdfire.Merge(context.Background(), r, opt)
+
+	fmt.Println("Finished")
+	r.Close()
 }
