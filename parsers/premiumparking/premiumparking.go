@@ -16,7 +16,7 @@ import (
 
 type parkingInfo struct {
 	date time.Time
-	address string
+	property string
 	amount currency.Amount
 }
 
@@ -24,7 +24,7 @@ func (p *parkingInfo) String() string {
 	var b strings.Builder
 	b.WriteString(p.date.Format("01/02/2006"))
 	b.WriteRune(';')
-	b.WriteString(p.address)
+	b.WriteString(p.property)
 	b.WriteRune(';')
 	b.WriteString(p.amount.Number())
 	b.WriteRune('\n')
@@ -49,8 +49,8 @@ func parsePremiumParking(s []string) {
 									panic(err)
 								}
 								info.date = d
-							case "Address:":
-								info.address = strings.Trim(c.NextSibling.Data, " \n\x0a")
+							case "Property name:":
+								info.property = strings.Trim(c.NextSibling.Data, " \n\x0a")
 							case "Amount:":
 								a, err := currency.NewAmount(strings.Trim(c.NextSibling.Data, "$ \n\x0a"), "USD")
 								if err != nil {
