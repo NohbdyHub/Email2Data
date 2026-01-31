@@ -8,6 +8,7 @@ import (
 	html "golang.org/x/net/html"
 
 	"parking/retrievers"
+	"parking/util"
 
 	"github.com/modernice/pdfire"
 )
@@ -15,29 +16,22 @@ import (
 var parsers = make([]Parser, 0)
 
 type Parser struct {
-	sender string
+	query retrievers.Query
 	parse func([]string)
 	htmlmail []string
-}
-
-func Must[T any](obj T, err error) T {
-	if err != nil {
-		panic(err)
-	}
-	return obj
 }
 
 func Available() []Parser {
 	return parsers
 }
 
-func Register(sender string, parse func([]string)) {
-	fmt.Println("Registering ", sender)
-	parsers = append(parsers, Parser{sender, parse, make([]string, 0)})
+func Register(query retrievers.Query, parse func([]string)) {
+	fmt.Println("Registering ", query.Sender)
+	parsers = append(parsers, Parser{query, parse, make([]string, 0)})
 }
 
 func (p *Parser) Fetch(r retrievers.Retriever) {
-	p.htmlmail = r.Retrieve(p.sender)
+	p.htmlmail = r.Retrieve(p.query)
 }
 
 func (p *Parser) PDF(filename string) {
@@ -48,7 +42,7 @@ func (p *Parser) PDF(filename string) {
 		merge.Documents = append(merge.Documents, page)
 	}
 
-	r := Must(os.Create(filename))
+	r := util.Must(os.Create(filename))
 	if err := pdfire.Merge(context.Background(), r, merge); err != nil {
 		panic(err)
 	}

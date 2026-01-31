@@ -3,28 +3,19 @@ package retrievers
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
-	"fmt"
-	"io"
 	"os"
 	"strings"
 	"time"
 
 	"parking/auth"
+	"parking/util"
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
 )
 
-type gmailQuery struct {
-	Sender string
-	Date string
-	Subject string
-}
-
-
-func (q *gmailQuery) String() string {
+func GmailQuery(q Query) string {
 	var b strings.Builder
 
 	var t time.Time
@@ -32,7 +23,7 @@ func (q *gmailQuery) String() string {
 		t = time.Now()
 		t = time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
 	} else {
-		t = Must(time.Parse("01/2006", q.Date))
+		t = util.Must(time.Parse("01/2006", q.Date))
 	}
 
 	b.WriteString("from:")
@@ -49,49 +40,24 @@ func (q *gmailQuery) String() string {
 
 type Gmail struct {
 	*gmail.Service
-	gmailQuery
 }
 
 func NewGmail() Gmail {
 	// google auth setup
-	b := Must(os.ReadFile("credentials.json"))
+	b := util.Must(os.ReadFile("credentials.json"))
 
-	oauth := Must(google.ConfigFromJSON(b, gmail.GmailReadonlyScope))
+	oauth := util.Must(google.ConfigFromJSON(b, gmail.GmailReadonlyScope))
 	client := auth.GetClient(oauth)
-	g := Must(gmail.NewService(context.Background(), option.WithHTTPClient(client)))
+	g := util.Must(gmail.NewService(context.Background(), option.WithHTTPClient(client)))
 
-	// gmail config setup
-	qfile := Must(os.OpenFile("query.json", os.O_CREATE | os.O_RDWR, 0666))
-	defer qfile.Close()
-
-	qJSON := Must(io.ReadAll(qfile))
-
-	var q gmailQuery
-
-	if len(qJSON) == 0 {
-		q = gmailQuery{Sender: "noreply@premiumparking.com", Date: "auto", Subject: "Expired"}
-		qfile.Write(Must(json.MarshalIndent(q, "", "	")))
-		fmt.Println("Please ensure `query.json` has the correct information")
-		fmt.Println("The default query will find all PremiumParking receipts from the current month")
-		fmt.Println("Sender: Email address you recieve parking confirmations from")
-		fmt.Println("Date: \"auto\" to use current realtime month, MM/YYYY to filter to a specific month")
-		fmt.Println("Subject: Only retrieve mail including this phrase in the Subject line")
-		os.Exit(0)
-	} else {
-		err := json.Unmarshal(qJSON, &q)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	return Gmail{g, q}
+	return Gmail{g}
 }
 
 
-func (g Gmail) Retrieve(from string) (rawHTML []string) {
-	msgs := Must(g.Users.Messages.List("me").Q(g.String()).Do())
+func (g Gmail) Retrieve(q Query) (rawHTML []string) {
+	msgs := util.Must(g.Users.Messages.List("me").Q(GmailQuery(q)).Do())
 	for _, msg := range msgs.Messages {
-		m := Must(g.Users.Messages.Get("me", msg.Id).Format("full").Do())
+		m := util.Must(g.Users.Messages.Get("me", msg.Id).Format("full").Do())
 		for _, p := range m.Payload.Parts {
 			isHTML := false
 			for _, h := range p.Headers {
@@ -104,7 +70,7 @@ func (g Gmail) Retrieve(from string) (rawHTML []string) {
 				continue
 			}
 
-			rawHTML = append(rawHTML, string(Must(base64.URLEncoding.DecodeString(p.Body.Data))))
+			rawHTML = append(rawHTML, string(util.Must(base64.URLEncoding.DecodeString(p.Body.Data))))
 		}
 	}
 	return

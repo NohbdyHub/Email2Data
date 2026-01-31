@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"parking/parsers"
+	"parking/retrievers"
+	"parking/util"
 
 	"github.com/bojanz/currency"
 	html "golang.org/x/net/html"
@@ -33,7 +35,7 @@ func (p *parkingInfo) String() string {
 func parsePremiumParking(s []string) {
 	allInfo := make([]parkingInfo, 0)
 	for _, raw := range s {
-		doc := parsers.Must(html.Parse(strings.NewReader(raw)))
+		doc := util.Must(html.Parse(strings.NewReader(raw)))
 		info := parkingInfo{}
 
 		op := func(n *html.Node) {
@@ -66,7 +68,7 @@ func parsePremiumParking(s []string) {
 		allInfo = append(allInfo, info)
 	}
 
-	csv := parsers.Must(os.Create("receipts.csv"))
+	csv := util.Must(os.Create("receipts.csv"))
 	csv.WriteString("Date of Service;Name of Parking Garage/Lot;Amount Paid\n")
 	for _, r := range allInfo {
 		csv.WriteString(r.String())
@@ -76,5 +78,7 @@ func parsePremiumParking(s []string) {
 }
 
 func init() {
-	parsers.Register("noreply@premiumparking.com", parsePremiumParking)
+	q := retrievers.Query{Sender: "noreply@premiumparking.com", Date: "auto", Subject: "Expired"}
+	q.Load("premiumparking.json")
+	parsers.Register(q, parsePremiumParking)
 }
