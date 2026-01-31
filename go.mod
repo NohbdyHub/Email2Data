@@ -3,6 +3,7 @@ module parking
 go 1.25.6
 
 require (
+	github.com/bojanz/currency v1.4.2
 	github.com/modernice/pdfire v1.1.1
 	golang.org/x/net v0.49.0
 	golang.org/x/oauth2 v0.34.0
@@ -13,12 +14,10 @@ require (
 	cloud.google.com/go/auth v0.18.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
-	github.com/bojanz/currency v1.4.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chromedp/cdproto v0.0.0-20191003000610-799a06e3acec // indirect
 	github.com/chromedp/chromedp v0.4.1 // indirect
 	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
-	github.com/dslipak/pdf v0.0.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
