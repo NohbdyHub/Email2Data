@@ -100,8 +100,6 @@ func init() {
 func main() {
 	pdfs := make([]*pdfire.ConversionOptions, 0)
 
-	parser := parsers.ParkingParser{}
-
 	// retrieve all mail from {sender} that was received after {date}, only including mail containing {subject} in the Subject line
 	msgs := Must(mailService.Users.Messages.List("me").Q(query.String()).Do())
 	for _, msg := range msgs.Messages {
@@ -121,7 +119,13 @@ func main() {
 
 			// parse HTML while we still have access to it
 			rawHTML := string(Must(base64.URLEncoding.DecodeString(p.Body.Data)))
-			parser.Parse(rawHTML)
+			_, after, _ := strings.Cut(getHeader(email.Payload.Headers, "From"), "<")
+			addr, _, _ := strings.Cut(after, ">")
+			for _, p := range parsers.Parsers {
+				if p.IsParseable(addr) {
+					p.Parse(rawHTML)
+				}
+			}
 
 			// store HTML for merging into one file later
 			opt := pdfire.NewConversionOptions()
@@ -138,8 +142,9 @@ func main() {
 
 	pdfire.Merge(context.Background(), r, opt)
 
-	parser.ParseBatch()
+	for _, p := range parsers.Parsers {
+		p.ParseBatch()
+	}
 
-	fmt.Println("Finished")
 	r.Close()
 }

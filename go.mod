@@ -18,6 +18,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20191003000610-799a06e3acec // indirect
 	github.com/chromedp/chromedp v0.4.1 // indirect
 	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
+	github.com/dslipak/pdf v0.0.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

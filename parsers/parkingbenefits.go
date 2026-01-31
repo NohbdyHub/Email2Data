@@ -2,6 +2,7 @@ package parsers
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -9,19 +10,33 @@ import (
 	html "golang.org/x/net/html"
 )
 
-type Parser interface {
-	Parse(html string)
-	ParseBatch()
-}
-
 type parkingInfo struct {
 	date time.Time
 	address string
 	amount currency.Amount
 }
 
+func (p *parkingInfo) String() string {
+	var b strings.Builder
+	b.WriteString(p.date.Format("01/02/2006"))
+	b.WriteRune(';')
+	b.WriteString(p.address)
+	b.WriteRune(';')
+	b.WriteString(p.amount.Number())
+	b.WriteRune('\n')
+
+	return  b.String()
+}
+
 type ParkingParser struct {
 	info []parkingInfo
+}
+
+func Must[T any](obj T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return obj
 }
 
 func (p *ParkingParser) Parse(h string) {
@@ -85,9 +100,6 @@ func (p *ParkingParser) Parse(h string) {
 func (p *ParkingParser) ParseBatch() {
 	var total currency.Amount
 	for _, i := range p.info {
-		fmt.Println(i.amount.Number())
-		fmt.Println(i.address)
-		fmt.Println(i.date.Format("01/02/2006"))
 		t, err := total.Add(i.amount)
 		if err != nil {
 			panic(err)
@@ -96,5 +108,19 @@ func (p *ParkingParser) ParseBatch() {
 		total = t
 	}
 
-	fmt.Println(total.Number())
+	csv := Must(os.Create("receipts.csv"))
+	csv.WriteString("Date of Service;Name of Parking Garage/Lot;Amount Paid\n")
+	for _, r := range p.info {
+		csv.WriteString(r.String())
+	}
+	fmt.Fprintf(csv, ";;=SUM(C2:C%d)", len(p.info) + 1)
+	csv.Close()
+}
+
+func (p *ParkingParser) IsParseable(addr string) bool {
+	return addr == "noreply@premiumparking.com"
+}
+
+func init() {
+	Parsers = append(Parsers, &ParkingParser{})
 }
