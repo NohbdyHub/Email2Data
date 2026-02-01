@@ -5,6 +5,7 @@ go 1.25.6
 require (
 	github.com/bojanz/currency v1.4.2
 	github.com/modernice/pdfire v1.1.1
+	github.com/yosuke-furukawa/json5 v0.1.1
 	golang.org/x/net v0.49.0
 	golang.org/x/oauth2 v0.34.0
 	google.golang.org/api v0.264.0

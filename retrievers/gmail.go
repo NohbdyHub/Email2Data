@@ -42,7 +42,7 @@ type Gmail struct {
 	*gmail.Service
 }
 
-func NewGmail() Gmail {
+func newGmail() Gmail {
 	// google auth setup
 	b := util.Must(os.ReadFile("credentials.json"))
 

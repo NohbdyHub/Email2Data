@@ -79,6 +79,5 @@ func parsePremiumParking(s []string) {
 
 func init() {
 	q := retrievers.Query{Sender: "noreply@premiumparking.com", Date: "auto", Subject: "Expired"}
-	q.Load("premiumparking.json")
 	parsers.Register(q, parsePremiumParking)
 }
