@@ -15,8 +15,8 @@ import (
 )
 
 type parkingInfo struct {
-	date time.Time
-	name string
+	date   time.Time
+	name   string
 	amount currency.Amount
 }
 
@@ -29,15 +29,15 @@ func (p *parkingInfo) String() string {
 	b.WriteString(p.amount.Number())
 	b.WriteRune('\n')
 
-	return  b.String()
+	return b.String()
 }
 
 func toPropertyName(location string) (name string) {
-	switch location{
-		case "P8676":
-			name = "Garfield Garage"
-		default:
-			name = location
+	switch location {
+	case "P8676":
+		name = "Garfield Garage"
+	default:
+		name = location
 	}
 	return name
 }
@@ -53,21 +53,21 @@ func parsePremiumParking(s []string) {
 				for c := n.FirstChild; c != nil; c = c.NextSibling {
 					if c.Type == html.ElementNode && c.Data == "strong" {
 						switch c.FirstChild.Data {
-							case "Start:":
-								d, err := time.Parse("01/02/2006  3:04 PM (MST)", strings.Trim(c.NextSibling.Data, " \n\x0a"))
-								if err != nil {
-									panic(err)
-								}
-								info.date = d
-							case "Location:":
-								info.name = toPropertyName(strings.Trim(c.NextSibling.Data, " \n\x0a"))
-							case "Amount:":
-								a, err := currency.NewAmount(strings.Trim(c.NextSibling.Data, "$ \n\x0a"), "USD")
-								if err != nil {
-									panic(err)
-								}
+						case "Start:":
+							d, err := time.Parse("01/02/2006  3:04 PM (MST)", strings.Trim(c.NextSibling.Data, " \n\x0a"))
+							if err != nil {
+								panic(err)
+							}
+							info.date = d
+						case "Location:":
+							info.name = toPropertyName(strings.Trim(c.NextSibling.Data, " \n\x0a"))
+						case "Amount:":
+							a, err := currency.NewAmount(strings.Trim(c.NextSibling.Data, "$ \n\x0a"), "USD")
+							if err != nil {
+								panic(err)
+							}
 
-								info.amount = a
+							info.amount = a
 						}
 					}
 				}
@@ -83,7 +83,7 @@ func parsePremiumParking(s []string) {
 	for _, r := range allInfo {
 		csv.WriteString(r.String())
 	}
-	fmt.Fprintf(csv, ";;=SUM(C2:C%d)", len(allInfo) + 1)
+	fmt.Fprintf(csv, ";;=SUM(C2:C%d)", len(allInfo)+1)
 	csv.Close()
 }
 

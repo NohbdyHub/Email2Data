@@ -34,8 +34,10 @@ func pdfPrint(HTMLpages []string, outfile string) {
 
 //go:embed example.json
 var example embed.FS
+
 // loads config from given file. Creates config file populated with initial contents of {q} if none already exists
 var queries []retrievers.Query
+
 func init() {
 	qFiles, err := os.ReadDir("searches")
 
