@@ -7,12 +7,14 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"runtime"
 	"os/exec"
+	"runtime"
 	"strings"
-	"time"
 
 	"golang.org/x/oauth2"
+
+	"parking/util"
+
 )
 
 // Retrieve a token, saves the token, then returns the generated client.
@@ -68,31 +70,32 @@ func isWSL() bool {
 
 // Request a token from the web, then returns the retrieved token.
 func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
-	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Println("Authorization screen opened in Browser")
-	OpenURL(authURL)
-
 	server := &http.Server{	Addr: ":6969"}
 	var tok *oauth2.Token
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Got request!", r.Method)
-
 		token := r.URL.Query().Get("code")
 		t, err := config.Exchange(context.TODO(), token)
 		if err != nil {
 			log.Fatalf("Unable to retrieve token from web: %v", err)
 		}
 		tok = t
+
 		go func (){
-			timer := time.NewTimer(3 * time.Second)
-			<-timer.C
 			server.Shutdown(context.Background())
 		}()
+
+		w.Write([]byte("Authorization successful, you may close this tab now."))
 	})
 
-	err := server.ListenAndServe()
-	fmt.Println(err)
+	bar := util.Spinner("Authorizing", "Authorized!")
 
+	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	OpenURL(authURL)
+	err := server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		fmt.Println("HTTP Error on close:", err)
+	}
+	bar.Close()
 
 	return tok
 }

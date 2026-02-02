@@ -86,8 +86,16 @@ func main() {
 			skip++
 			continue
 		}
+
+		spin := util.Spinner(fmt.Sprintf("Getting mail from <%s>", q.Sender), fmt.Sprintf("Got mail from <%s>", q.Sender))
 		raw := r.Retrieve(q)
+		spin.Close()
+
+		p := "receipts.pdf"
+		spin = util.Spinner(fmt.Sprintf("Saving to <%s>", p), fmt.Sprintf("Saved to <%s>", p))
 		pdfPrint(raw, "receipts.pdf")
+		spin.Close()
+
 		for _, p := range parsers.Available() {
 			p.Parse(q, raw)
 		}
