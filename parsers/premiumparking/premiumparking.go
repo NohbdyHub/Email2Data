@@ -3,6 +3,7 @@ package premiumparking
 import (
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -78,7 +79,7 @@ func parsePremiumParking(s []string) {
 		allInfo = append(allInfo, info)
 	}
 
-	csv := util.Must(os.Create("receipts.csv"))
+	csv := util.Must(os.Create(path.Join("output", "receipts.csv")))
 	csv.WriteString("Date of Service;Name of Parking Garage/Lot;Amount Paid\n")
 	for _, r := range allInfo {
 		csv.WriteString(r.String())

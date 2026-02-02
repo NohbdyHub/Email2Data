@@ -32,6 +32,18 @@ func pdfPrint(HTMLpages []string, outfile string) {
 	r.Close()
 }
 
+func createDir(name string) []os.DirEntry {
+	dirs, err := os.ReadDir(name)
+
+	if err != nil {
+		err = os.Mkdir(name, 0777)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return dirs
+}
+
 //go:embed example.json
 var example embed.FS
 
@@ -39,16 +51,11 @@ var example embed.FS
 var queries []retrievers.Query
 
 func init() {
-	qFiles, err := os.ReadDir("searches")
+	qDir := createDir("searches")
+	_ = createDir("config")
+	_ = createDir("output")
 
-	if err != nil {
-		err = os.Mkdir("searches", 0777)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	if len(qFiles) == 0 {
+	if len(qDir) == 0 {
 		b := util.Must(example.ReadFile("example.json"))
 		e := util.Must(os.Create(path.Join("searches", "example.json")))
 		defer e.Close()
@@ -56,7 +63,7 @@ func init() {
 		util.Must(e.Write(b))
 	}
 
-	for _, f := range qFiles {
+	for _, f := range qDir {
 		if !f.IsDir() {
 			p := path.Join("searches", f.Name())
 			qfile := util.Must(os.Open(p))
@@ -93,9 +100,9 @@ func main() {
 		raw := r.Retrieve(q)
 		spin.Close()
 
-		p := "receipts.pdf"
+		p := path.Join("output", "receipts.pdf")
 		spin = util.Spinner(fmt.Sprintf("Saving to <%s>", p), fmt.Sprintf("Saved to <%s>", p))
-		pdfPrint(raw, "receipts.pdf")
+		pdfPrint(raw, p)
 		spin.Close()
 
 		for _, p := range parsers.Available() {

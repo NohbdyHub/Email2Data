@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -44,7 +45,7 @@ type Gmail struct {
 
 func newGmail() Gmail {
 	// google auth setup
-	b := util.Must(os.ReadFile("credentials.json"))
+	b := util.Must(os.ReadFile(path.Join("config", "credentials.json")))
 
 	oauth := util.Must(google.ConfigFromJSON(b, gmail.GmailReadonlyScope))
 	client := auth.GetClient(oauth)
