@@ -14,7 +14,6 @@ import (
 	"golang.org/x/oauth2"
 
 	"parking/util"
-
 )
 
 // Retrieve a token, saves the token, then returns the generated client.
@@ -32,30 +31,32 @@ func GetClient(config *oauth2.Config) *http.Client {
 }
 
 // openURL opens the specified URL in the default browser of the user.
-func OpenURL(url string) error {
+func openURL(url string) error {
 	var cmd string
 	var args []string
 
 	switch runtime.GOOS {
-		case "windows":
-			cmd = "cmd"
-			args = []string{"/c", "start"}
-		case "darwin":
-			cmd = "open"
+	case "windows":
+		cmd = "cmd"
+		args = []string{"/c", "start", url}
+	case "darwin":
+		cmd = "open"
+		args = []string{url}
+	default:
+		if isWSL() {
+			cmd = "cmd.exe"
+			args = []string{"/c", "start", url}
+		} else {
+			cmd = "xdg-open"
 			args = []string{url}
-		default:
-			if isWSL() {
-				cmd = "cmd.exe"
-				args = []string{"/c", "start", url}
-			} else {
-				cmd = "xdg-open"
-				args = []string{url}
-			}
+		}
 	}
 	if len(args) > 1 {
 		// args[0] is used for 'start' command argument, to prevent issues with URLs starting with a quote
 		args = append(args[:1], append([]string{""}, args[1:]...)...)
 	}
+
+	fmt.Println(cmd, args)
 	return exec.Command(cmd, args...).Start()
 }
 
@@ -70,7 +71,7 @@ func isWSL() bool {
 
 // Request a token from the web, then returns the retrieved token.
 func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
-	server := &http.Server{	Addr: ":6969"}
+	server := &http.Server{Addr: ":6969"}
 	var tok *oauth2.Token
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		token := r.URL.Query().Get("code")
@@ -80,7 +81,7 @@ func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 		}
 		tok = t
 
-		go func (){
+		go func() {
 			server.Shutdown(context.Background())
 		}()
 
@@ -90,7 +91,7 @@ func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 	bar := util.Spinner("Authorizing", "Authorized!")
 
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	OpenURL(authURL)
+	openURL(authURL)
 	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		fmt.Println("HTTP Error on close:", err)
