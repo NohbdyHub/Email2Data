@@ -6,5 +6,5 @@
 	// format MM/YYYY, auto to use current month
 	"Date": "auto",
 	// only retrieve emails containing this phrase in the subject line
-	"SubjectLineContains": "Keyphrase"
+	"Subject": "Keyphrase"
 }

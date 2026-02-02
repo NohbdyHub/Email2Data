@@ -1,8 +1,6 @@
 package parsers
 
 import (
-	"fmt"
-
 	html "golang.org/x/net/html"
 
 	"parking/retrievers"
@@ -20,7 +18,6 @@ func Available() []Parser {
 }
 
 func Register(query retrievers.Query, parse func([]string)) {
-	fmt.Println("Registering ", query.Sender)
 	parsers = append(parsers, Parser{query, parse})
 }
 
