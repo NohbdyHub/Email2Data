@@ -21,7 +21,6 @@ func Register(query retrievers.Query, parse func([]string)) {
 	parsers = append(parsers, Parser{query, parse})
 }
 
-
 func (p *Parser) Parse(query retrievers.Query, raw []string) {
 	if p.query.Sender == query.Sender && p.query.Subject == query.Subject {
 		p.parse(raw)

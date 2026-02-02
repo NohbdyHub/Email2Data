@@ -37,27 +37,32 @@ func openURL(url string) error {
 
 	switch runtime.GOOS {
 	case "windows":
-		cmd = "cmd"
-		args = []string{"/c", "start", url}
+		cmd = "cmd.exe"
+		args = []string{"/c", "rundll32", "url.dll,FileProtocolHandler", strings.ReplaceAll(url, "&", "^&")}
 	case "darwin":
 		cmd = "open"
 		args = []string{url}
 	default:
 		if isWSL() {
 			cmd = "cmd.exe"
-			args = []string{"/c", "start", url}
+			args = []string{"start", url}
 		} else {
 			cmd = "xdg-open"
 			args = []string{url}
 		}
 	}
-	if len(args) > 1 {
-		// args[0] is used for 'start' command argument, to prevent issues with URLs starting with a quote
-		args = append(args[:1], append([]string{""}, args[1:]...)...)
+
+	e := exec.Command(cmd, args...)
+	err := e.Start()
+	if err != nil {
+		return err
+	}
+	err = e.Wait()
+	if err != nil {
+		return err
 	}
 
-	fmt.Println(cmd, args)
-	return exec.Command(cmd, args...).Start()
+	return nil
 }
 
 // isWSL checks if the Go program is running inside Windows Subsystem for Linux
@@ -91,8 +96,12 @@ func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 	bar := util.Spinner("Authorizing", "Authorized!")
 
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	openURL(authURL)
-	err := server.ListenAndServe()
+	err := openURL(authURL)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Opened!")
+	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		fmt.Println("HTTP Error on close:", err)
 	}

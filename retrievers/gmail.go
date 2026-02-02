@@ -53,7 +53,6 @@ func newGmail() Gmail {
 	return Gmail{g}
 }
 
-
 func (g Gmail) Retrieve(q Query) (rawHTML []string) {
 	msgs := util.Must(g.Users.Messages.List("me").Q(GmailQuery(q)).Do())
 	for _, msg := range msgs.Messages {

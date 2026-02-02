@@ -1,11 +1,11 @@
 package util
 
 import (
-	"time"
 	"fmt"
+	"time"
+
 	progressbar "github.com/schollz/progressbar/v3"
 )
-
 
 func Spinner(description, completion string, options ...progressbar.Option) *progressbar.ProgressBar {
 	opt := []progressbar.Option{
@@ -15,7 +15,7 @@ func Spinner(description, completion string, options ...progressbar.Option) *pro
 		progressbar.OptionSetRenderBlankState(true),
 		progressbar.OptionSetSpinnerChangeInterval(time.Millisecond * 333),
 		progressbar.OptionClearOnFinish(),
-		progressbar.OptionOnCompletion(func() {fmt.Printf("[ ฅ₍^. ̫ .^₎ฅ ] %s\n", completion)}),
+		progressbar.OptionOnCompletion(func() { fmt.Printf("[ ฅ₍^. ̫ .^₎ฅ ] %s\n", completion) }),
 	}
 
 	opt = append(options, opt...)

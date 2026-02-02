@@ -5,17 +5,17 @@ type Retriever interface {
 }
 
 type Query struct {
-	Sender string
-	Date string
+	Sender  string
+	Date    string
 	Subject string
 }
 
 func NewRetriever(kind string) (r Retriever) {
 	switch kind {
-		case "gmail":
-			r = newGmail()
-		default:
-			r = newGmail()
+	case "gmail":
+		r = newGmail()
+	default:
+		r = newGmail()
 	}
 	return
 }
