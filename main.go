@@ -102,7 +102,6 @@ func main() {
 	}
 
 	if skip == len(queries) {
-		fmt.Println("Nothing happened!")
-		fmt.Println("Make sure you add a search in the \"searches\" folder!")
+		fmt.Println("See searches/example.json to set up a search")
 	}
 }
