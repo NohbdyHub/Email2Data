@@ -101,7 +101,7 @@ func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Opened!")
+
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		fmt.Println("HTTP Error on close:", err)
