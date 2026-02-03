@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -16,6 +17,11 @@ import (
 	"github.com/modernice/pdfire"
 	"github.com/yosuke-furukawa/json5/encoding/json5"
 )
+
+type skip struct {
+	q *retrievers.Query
+	r error
+}
 
 func pdfPrint(HTMLpages []string, outfile string) {
 	merge := pdfire.NewMergeOptions()
@@ -89,16 +95,21 @@ func init() {
 func main() {
 	r := retrievers.NewRetriever("gmail")
 
-	skip := 0
+	skips := make([]skip, 0)
 	for _, q := range queries {
 		if q.Sender == "example@address.com" {
-			skip++
+			skips = append(skips, skip{&q, errors.New("Just an example!")})
 			continue
 		}
 
 		spin := util.Spinner(fmt.Sprintf("Getting mail from <%s>", q.Sender), fmt.Sprintf("Got mail from <%s>", q.Sender))
 		raw := r.Retrieve(q)
 		spin.Close()
+
+		if len(raw) == 0 {
+			skips = append(skips, skip{&q, errors.New("No results")})
+			continue
+		}
 
 		p := path.Join("output", "receipts.pdf")
 		spin = util.Spinner(fmt.Sprintf("Saving to <%s>", p), fmt.Sprintf("Saved to <%s>", p))
@@ -110,7 +121,11 @@ func main() {
 		}
 	}
 
-	if skip == len(queries) {
+	if len(skips) == 1 && len(queries) == 1 {
 		fmt.Println("See searches/example.json to set up a search")
+	}
+
+	for _, s := range skips {
+		fmt.Println(s.r, "for search:", s.q)
 	}
 }

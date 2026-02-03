@@ -1,9 +1,0 @@
-// fill this file with your search terms
-// or copy this file to make more searches simultaneously
-{
-	"Sender": "example@address.com",
-	// format MM/YYYY, auto to use current month
-	"Date": "auto",
-	// only retrieve emails containing this phrase in the subject line
-	"Subject": "Keyphrase"
-}
