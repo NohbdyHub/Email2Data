@@ -3,6 +3,7 @@ package retrievers
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -44,8 +45,41 @@ type Gmail struct {
 }
 
 func newGmail() Gmail {
-	// google auth setup
-	b := util.Must(os.ReadFile(path.Join("config", "credentials.json")))
+	cred := path.Join("config", "credentials.json")
+	b, err := os.ReadFile(cred)
+	if err != nil {
+		fmt.Println("No API credentials found in", cred, ". To get credentials, complete each of the steps at the following link according to these instructions: ")
+		fmt.Println("https://developers.google.com/workspace/guides/get-started")
+		fmt.Println("")
+
+		fmt.Println("Step 1: Create a Google Cloud Project")
+		fmt.Println("- Click \"Go to Create a Project\", Name can be whatever, and leave Location as \"No organization\".")
+		fmt.Println("")
+
+		fmt.Println("Step 2: Enable the APIs you want to use")
+		fmt.Println("- Click \"Go to Product Library\", click \"Gmail API\", click \"Enable\".")
+		fmt.Println("")
+
+		fmt.Println("Step 3: Learn how authentication and authorization works")
+		fmt.Println("- SKIP. Optional reading.")
+		fmt.Println("")
+
+		fmt.Println("Step 4: Configure OAuth consent")
+		fmt.Println("- Click \"Get started\". App Information can be whatever. Audience must be EXTERNAL. Contact Information is your own.")
+		fmt.Println("- Click \"Create OAuth client\". Application type is \"Web application\". Name can be whatever.")
+		fmt.Println("- Under \"Authorized redirect URIs\", click \"Add URI\", and paste the following: https://localhost:6969")
+		fmt.Println("- Click \"Create\". Click \"Download JSON\". Rename to \"credentials.json\", and move to the \"config\" folder.")
+		fmt.Println("- If you lose or delete your credentials.json file, delete the client you just made and repeat this step.")
+		fmt.Println("")
+
+		fmt.Println("Step 5: Let yourself use your own app (dumb I know)")
+		fmt.Println("- Navigate to \"https://console.cloud.google.com/auth/audience\". ")
+		fmt.Println("- Under \"Test users\", click \"Add users\". Enter any email addresses you will want to use this program with.")
+		fmt.Println("")
+
+		fmt.Println("DONE. Run this program again!")
+		os.Exit(1)
+	}
 
 	oauth := util.Must(google.ConfigFromJSON(b, gmail.GmailReadonlyScope))
 	client := auth.GetClient(oauth)
