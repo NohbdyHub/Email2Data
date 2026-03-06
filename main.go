@@ -106,6 +106,12 @@ func main() {
 		raw := r.Retrieve(q)
 		spin.Close()
 
+		if len(raw) == 0 {
+			fmt.Printf("No mail from <%s>!\n", q.Sender)
+			skips = append(skips, skip{&q, errors.New("No results")})
+			continue
+		}
+
 		p := path.Join("output", "receipts.pdf")
 		spin = util.Spinner(fmt.Sprintf("Saving to <%s>", p), fmt.Sprintf("Saved to <%s>", p))
 		pdfPrint(raw, p)
