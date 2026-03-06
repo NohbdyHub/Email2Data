@@ -10,6 +10,10 @@ type Query struct {
 	Subject string
 }
 
+func (q *Query) String() string {
+	return GmailQuery(*q)
+}
+
 func NewRetriever(kind string) (r Retriever) {
 	switch kind {
 	case "gmail":
